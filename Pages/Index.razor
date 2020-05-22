@@ -1,5 +1,12 @@
 ﻿@page "/"
 @inject HttpClient HttpClient
+@using ChartJs.Blazor.ChartJS.BarChart
+@using ChartJs.Blazor.ChartJS.BarChart.Axes
+@using ChartJs.Blazor.ChartJS.Common.Axes
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.ChartJS.Common.Properties
+@using ChartJs.Blazor.ChartJS.Common.Wrappers
+@using ChartJs.Blazor.Util
 
 <div class="test-center">
     <h1>Lockdown</h1>
@@ -17,6 +24,7 @@
 
 @if (_summaryData != null)
 {
+    <ChartJsBarChart @ref="_barChartJs" Config="@_config" Width="600" Height="300" />
     <div class="text-center">
         <div class="p-2">
             <button class="btn btn-primary btn-lg" @onclick="OrderByTotalDeaths">Order by Total Deaths</button>
@@ -62,6 +70,7 @@
     {
         var url = "summary";
         _summaryData = await HttpClient.GetFromJsonAsync<Model.SummaryData>(url);
+        GenerateBarChart();
     }
 
     private void OrderByTotalDeaths()
@@ -72,5 +81,56 @@
     private void OrderByCountry()
     {
         _summaryData.Countries = _summaryData.Countries.OrderBy(c => c.Country);
+    }
+
+    private BarConfig _config;
+    private ChartJsBarChart _barChartJs;
+    private void GenerateBarChart()
+    {
+        _config = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Title = new OptionsTitle
+                {
+                    Display = true,
+                    Text = "Stats per Country"
+                },
+                Scales = new BarScales
+                {
+                    XAxes = new List<CartesianAxis>
+    {
+    new BarCategoryAxis
+    {
+    BarThickness = BarThickness.Flex,
+    Stacked = true
+    }
+    }
+                },
+                Responsive = true
+            }
+        };
+
+        var countryData = _summaryData.Countries.OrderByDescending(c => c.TotalConfirmed).Take(10).ToList();
+        countryData.ForEach(c => _config.Data.Labels.Add(c.Country));
+        var totalCases = new BarDataset<DoubleWrapper>()
+        {
+            Label = "Total Cases",
+            BackgroundColor = "blue"
+        };
+        var totalDeaths = new BarDataset<DoubleWrapper>()
+        {
+            Label = "Total Deaths",
+            BackgroundColor = "red"
+        };
+
+        foreach (var data in countryData)
+        {
+            totalCases.Add(data.TotalConfirmed);
+            totalDeaths.Add(data.TotalDeaths);
+        }
+
+        _config.Data.Datasets.Add(totalDeaths);
+        _config.Data.Datasets.Add(totalCases);
     }
 }

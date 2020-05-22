@@ -1,0 +1,76 @@
+﻿@page "/"
+@inject HttpClient HttpClient
+
+<div class="test-center">
+    <h1>Lockdown</h1>
+    <small>A small app used to display Covid-19 data</small>
+</div>
+
+<div class="text-center">
+    <div class="p-2">
+        <input class="form-control form-control-lg w-50 mx-auto mt-4" placeholder="Country Name" />
+    </div>
+    <div class="p-2">
+        <button class="btn btn-primary btn-lg" @onclick="GetSummaryData">Get Summary Data</button>
+    </div>
+</div>
+
+@if (_summaryData != null)
+{
+    <div class="text-center">
+        <div class="p-2">
+            <button class="btn btn-primary btn-lg" @onclick="OrderByTotalDeaths">Order by Total Deaths</button>
+            <button class="btn btn-primary btn-lg" @onclick="OrderByCountry">Order by Country</button>
+        </div>
+        <p>Data Date: @_summaryData.Date</p>
+    </div>
+
+    <p class="text-center">@_summaryData.Global.NewDeaths</p>
+
+    <div class="container">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3">
+            @foreach (var country in _summaryData.Countries)
+            {
+            <div class="col-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        @country.Country
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                New: @country.NewDeaths
+                            </li>
+                            <li class="list-group-item">
+                                Total: @country.TotalDeaths
+                            </li>
+                            <li class="list-group-item">Vestibulum at eros</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+}
+
+@code
+{
+    private Model.SummaryData _summaryData;
+
+    private async Task GetSummaryData()
+    {
+        var url = "summary";
+        _summaryData = await HttpClient.GetFromJsonAsync<Model.SummaryData>(url);
+    }
+
+    private void OrderByTotalDeaths()
+    {
+        _summaryData.Countries = _summaryData.Countries.OrderByDescending(c => c.TotalDeaths);
+    }
+
+    private void OrderByCountry()
+    {
+        _summaryData.Countries = _summaryData.Countries.OrderBy(c => c.Country);
+    }
+}

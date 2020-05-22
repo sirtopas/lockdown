@@ -25,6 +25,7 @@
 @if (_summaryData != null)
 {
     <ChartJsBarChart @ref="_barChartJs" Config="@_config" Width="600" Height="300" />
+    <Bubble SummaryData="@_summaryData"></Bubble>
     <div class="text-center">
         <div class="p-2">
             <button class="btn btn-primary btn-lg" @onclick="OrderByTotalDeaths">Order by Total Deaths</button>

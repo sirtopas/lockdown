@@ -1,0 +1,40 @@
+@page "/Bubble"
+@page "/Bubble/{summaryData}"
+@using ChartJs.Blazor.ChartJS.BubbleChart
+@using ChartJs.Blazor.Charts
+@using ChartJs.Blazor.Util
+
+<h1>Bubble Chart</h1>
+<ChartJsBubbleChart @ref="_bubbleChartJs" Config="@_config" Width="600" Height="300" />
+
+@code {
+    [Parameter]
+    public Model.SummaryData SummaryData { get; set; }
+
+    private BubbleConfig _config;
+    private ChartJsBubbleChart _bubbleChartJs;
+
+    private Random _rand = new Random();
+
+    protected override void OnInitialized()
+    {
+        _config = new BubbleConfig
+        {
+            Options = new BubbleOptions
+            {
+            }
+        };
+        _config.Data.Datasets = new List<BubbleDataset>();
+        var countryData = SummaryData.Countries.OrderByDescending(c => c.TotalConfirmed).Take(10).ToList();
+        foreach (var countryDataItem in countryData)
+        {
+            var newDataPoint = new BubbleDataset
+            {
+                Label = countryDataItem.Country,
+                BackgroundColor = ColorUtil.RandomColorString()
+            };
+            newDataPoint.Data.Add(new BubbleDataPoint(countryDataItem.TotalConfirmed, countryDataItem.NewDeaths, 10));
+            _config.Data.Datasets.Add(newDataPoint);
+        };
+    }
+}

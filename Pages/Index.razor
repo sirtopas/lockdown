@@ -6,7 +6,6 @@
 @using ChartJs.Blazor.Charts
 @using ChartJs.Blazor.ChartJS.Common.Properties
 @using ChartJs.Blazor.ChartJS.Common.Wrappers
-@using ChartJs.Blazor.Util
 
 <div class="test-center">
     <h1>Lockdown</h1>
@@ -48,12 +47,14 @@
                     <div class="card-body">
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                New: @country.NewDeaths
+                                New Deaths: @country.NewDeaths
                             </li>
                             <li class="list-group-item">
                                 Total: @country.TotalDeaths
                             </li>
-                            <li class="list-group-item">Vestibulum at eros</li>
+                            <li class="list-group-item">
+                                New Confirmed: @country.NewConfirmed
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -101,11 +102,11 @@
                 {
                     XAxes = new List<CartesianAxis>
     {
-    new BarCategoryAxis
-    {
-    BarThickness = BarThickness.Flex,
-    Stacked = true
-    }
+        new BarCategoryAxis
+        {
+            BarThickness = BarThickness.Flex,
+            Stacked = true
+        }
     }
                 },
                 Responsive = true

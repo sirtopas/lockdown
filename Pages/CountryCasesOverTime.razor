@@ -12,11 +12,32 @@
 
 <h2>Deaths over Time by Country</h2>
 
+@if(_countries != null)
+{
+    <label class="p-3">Selected Country: @_countryName</label>
+    <select class="form-control" @bind="_countryProperty">
+        @foreach (var country in _countries.OrderBy(c => c.Country))
+        {
+            <option value="@country.Slug">@country.Country</option>
+        }
+    </select>
+}
 <ChartJsLineChart @ref="_lineChartJs" Config="@_lineConfig" Width="600" Height="300" />
 
 @code
 {
     private IEnumerable<Model.CountryCasesPerDay> _countryDataOverTime;
+    private IEnumerable<Model.CountryDataItem> _countries;
+    private string _countryName = "united-kingdom";
+    private string _countryProperty
+    {
+        get { return _countryName; }
+        set
+        {
+            _countryName = value;
+            CountryChanged();
+        }
+    }
     LineConfig _lineConfig;
     ChartJsLineChart _lineChartJs;
     LineDataset<TimeTuple<int>> _tempDataSet;
@@ -45,27 +66,27 @@
                 Scales = new Scales
                 {
                     xAxes = new List<CartesianAxis>
-                {
-                    new TimeAxis
-                {
-                    Distribution = TimeDistribution.Linear,
-                    Ticks = new TimeTicks
                     {
-                        Source = TickSource.Data
-                    },
-                    Time = new TimeOptions
-                    {
-                        Unit = TimeMeasurement.Day,
-                        Round = TimeMeasurement.Millisecond,
-                        TooltipFormat = "DD.MM.YYYY HH:mm:ss:SSS",
-                        DisplayFormats = TimeDisplayFormats.DE_CH
-                    },
-                    ScaleLabel = new ScaleLabel
-                    {
-                    LabelString = "Time"
+                        new TimeAxis
+                        {
+                            Distribution = TimeDistribution.Linear,
+                            Time = new TimeOptions
+                            {
+                                Unit = TimeMeasurement.Day,
+                                Round = TimeMeasurement.Millisecond,
+                                TooltipFormat = "DD.MM.YYYY HH:mm:ss:SSS",
+                                DisplayFormats = TimeDisplayFormats.DE_CH
+                            },
+                            Ticks = new TimeTicks
+                            {
+                                
+                            },
+                            ScaleLabel = new ScaleLabel
+                            {
+                                LabelString = "Time"
+                            }
+                        }
                     }
-                }
-            }
                 }
             }
         };
@@ -81,10 +102,21 @@
             PointBorderWidth = 1,
             SteppedLine = SteppedLine.False
         };
-        var url = "country/united-kingdom/status/deaths";
+
+        var url = $"country/{_countryName}/status/deaths";
         _countryDataOverTime = await HttpClient.GetFromJsonAsync<IEnumerable<Model.CountryCasesPerDay>>(url);
-        _countryDataOverTime = _countryDataOverTime.Where(c => c.Province == "");
-        _tempDataSet.AddRange(_countryDataOverTime.Select(p => new TimeTuple<int>(new Moment(p.Date), p.Cases)));
+        _countries = await HttpClient.GetFromJsonAsync<IEnumerable<Model.CountryDataItem>>("countries");
+        _tempDataSet.AddRange(_countryDataOverTime.Where(c => c.Province == "").Select(p => new TimeTuple<int>(new Moment(p.Date), p.Cases)));
         _lineConfig.Data.Datasets.Add(_tempDataSet);
+    }
+
+    private async void CountryChanged()
+    {
+        var url = $"country/{_countryName}/status/deaths";
+        _tempDataSet.RemoveAll(c => c.Time != null);
+        _countryDataOverTime = await HttpClient.GetFromJsonAsync<IEnumerable<Model.CountryCasesPerDay>>(url);
+        _tempDataSet.AddRange(_countryDataOverTime.Where(c => c.Province == "").Select(p => new TimeTuple<int>(new Moment(p.Date), p.Cases)));
+        _lineConfig.Data.Datasets.Add(_tempDataSet);
+        await _lineChartJs.Update();
     }
 }

@@ -10,6 +10,8 @@ namespace Lockdown.Model
 
         public string Slug { get; set; }
 
+        public string ISO2 { get; set; }
+
         public int NewConfirmed { get; set; }
 
         public int TotalConfirmed { get; set; }
